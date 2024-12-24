@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart ATS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        textarea, input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .secondary-button {
+            background-color: #28a745;
+            color: white;
+            position: absolute;
+            top: 30%;
+            left: 20px;
+            transform: translateY(-50%);
+            padding: 10px 15px;
+            font-size: 14px;
+        }
+        .secondary-button:hover {
+            background-color: #218838;
+        }
+        #response {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #eaf7ea;
+            border: 1px solid #d4edda;
+            border-radius: 8px;
+            color: #155724;
+            font-family: Consolas, monospace;
+            white-space: pre-wrap;
+            overflow: auto;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        pre {
+            margin: 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smart ATS</h1>
+    <form id="atsForm" action="/process" method="post" enctype="multipart/form-data">
+        <label for="jd">Paste the Job Description:</label>
+        <textarea name="jd" id="jd" rows="8" placeholder="Enter the job description here..." required></textarea>
+        
+        <label for="resume">Upload Your Resume (PDF):</label>
+        <input type="file" name="resume" id="resume" accept=".pdf" required>
+        
+        <button type="submit">Submit</button>
+    </form>
+    
+    <button type="button" class="secondary-button" onclick="openTemplateLink()">ATS-Friendly Templates</button>
+    
+    <div id="response"></div>
+    
+    <script>
+        const form = document.getElementById('atsForm');
+        const responseDiv = document.getElementById('response');
+
+        // Function to handle "ATS-Friendly Templates" button click
+        function openTemplateLink() {
+            const url = "https://docs.google.com/document/d/1PcnH-LRVZI_EElKoyu8Cll2VeOIbrLr3/edit"; // Replace with your desired URL
+            window.open(url, "_blank");
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            responseDiv.innerHTML = "Processing your request...";
+
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    const parsedResponse = JSON.parse(result.response);
+                    const profileSummary = parsedResponse["Profile Summary"];
+                    const otherData = {
+                        "JD Match": parsedResponse["JD Match"],
+                        "MissingKeywords": parsedResponse["MissingKeywords"]
+                    };
+
+                    responseDiv.innerHTML = `
+                        <h2>Response:</h2>
+                        <div style="padding: 10px; background-color: #d4edda; border-radius: 5px;">
+                            <pre>${JSON.stringify(otherData, null, 2)}</pre>
+                            <h3>Profile Summary:</h3>
+                            <p style="white-space: pre-wrap; word-wrap: break-word;">${profileSummary}</p>
+                        </div>
+                    `;
+                } else {
+                    responseDiv.innerHTML = `<h2>Error:</h2><pre>${result.error}</pre>`;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<h2>Error:</h2><pre>${error.message}</pre>`;
+            }
+        });
+    </script>
+</body>
+</html>
