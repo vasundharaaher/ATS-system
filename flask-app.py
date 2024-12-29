@@ -48,22 +48,26 @@ def home():
 
 @app.route('/process', methods=['POST'])
 def process():
-    jd = request.form.get('jd')
-    uploaded_file = request.files.get('resume')
-    
-    if not jd or not uploaded_file:
-        return jsonify({"error": "Job description and resume are required!"}), 400
-    
-    # Extract text from the PDF
-    resume_text = input_pdf_text(uploaded_file)
-    
-    # Format the input for the AI model
-    prompt = input_prompt.format(text=resume_text, jd=jd)
-    
-    # Get the response from Gemini
-    response = get_gemini_response(prompt)
-    
-    return jsonify({"response": response})
+    try:
+        jd = request.form.get('jd')
+        uploaded_file = request.files.get('resume')
+
+        if not jd or not uploaded_file:
+            return jsonify({"error": "Job description and resume are required!"}), 400
+
+        # Extract text from the PDF
+        resume_text = input_pdf_text(uploaded_file)
+
+        # Format the input for the AI model
+        prompt = input_prompt.format(text=resume_text, jd=jd)
+
+        # Get the response from Gemini
+        response = get_gemini_response(prompt)
+
+        return jsonify({"response": response})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
