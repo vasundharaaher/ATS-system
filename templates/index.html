@@ -9,7 +9,6 @@
             font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f9f9f9;
-            position: relative;
         }
         h1 {
             text-align: center;
@@ -53,7 +52,7 @@
             background-color: #28a745;
             color: white;
             position: absolute;
-            top: 30%;
+            top: 20%;
             left: 20px;
             transform: translateY(-50%);
             padding: 10px 15px;
@@ -91,7 +90,7 @@
         <label for="resume">Upload Your Resume (PDF):</label>
         <input type="file" name="resume" id="resume" accept=".pdf" required>
         
-        <button type="submit">Submit</button>
+        <button type="submit">Analyze</button>
     </form>
     
     <button type="button" class="secondary-button" onclick="openTemplateLink()">ATS-Friendly Templates</button>
@@ -104,46 +103,50 @@
 
         // Function to handle "ATS-Friendly Templates" button click
         function openTemplateLink() {
-            const url = "https://docs.google.com/document/d/1PcnH-LRVZI_EElKoyu8Cll2VeOIbrLr3/edit"; // Replace with your desired URL
+            const url = "https://drive.google.com/drive/folders/1gQkr55cIzDg78rDuJeA4v4p3_CICUi9C?usp=drive_link"; // Replace with your desired URL
             window.open(url, "_blank");
         }
 
         form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(form);
-            responseDiv.innerHTML = "Processing your request...";
+             e.preventDefault();
+    
+    const formData = new FormData(form);
+    responseDiv.innerHTML = "<p>Processing your request...</p>";
 
-            try {
-                const response = await fetch('/process', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    const parsedResponse = JSON.parse(result.response);
-                    const profileSummary = parsedResponse["Profile Summary"];
-                    const otherData = {
-                        "JD Match": parsedResponse["JD Match"],
-                        "MissingKeywords": parsedResponse["MissingKeywords"]
-                    };
-
-                    responseDiv.innerHTML = `
-                        <h2>Response:</h2>
-                        <div style="padding: 10px; background-color: #d4edda; border-radius: 5px;">
-                            <pre>${JSON.stringify(otherData, null, 2)}</pre>
-                            <h3>Profile Summary:</h3>
-                            <p style="white-space: pre-wrap; word-wrap: break-word;">${profileSummary}</p>
-                        </div>
-                    `;
-                } else {
-                    responseDiv.innerHTML = `<h2>Error:</h2><pre>${result.error}</pre>`;
-                }
-            } catch (error) {
-                responseDiv.innerHTML = `<h2>Error:</h2><pre>${error.message}</pre>`;
-            }
+    try {
+        const response = await fetch('/process', {
+            method: 'POST',
+            body: formData
         });
+
+        if (!response.ok) {
+            const errorText = await response.text(); // Capture error response
+            responseDiv.innerHTML = `<h2>Error:</h2><pre>${errorText}</pre>`;
+            return;
+        }
+
+        const result = await response.json();
+        const parsedResponse = JSON.parse(result.response);
+
+        const profileSummary = parsedResponse["Profile Summary"];
+        const otherData = {
+            "JD Match": parsedResponse["JD Match"],
+            "MissingKeywords": parsedResponse["MissingKeywords"]
+        };
+
+        responseDiv.innerHTML = `
+            <h2>Response:</h2>
+            <div style="padding: 10px; background-color: #d4edda; border-radius: 5px;">
+                <pre>${JSON.stringify(otherData, null, 2)}</pre>
+                <h3>Profile Summary:</h3>
+                <p style="white-space: pre-wrap; word-wrap: break-word;">${profileSummary}</p>
+            </div>
+        `;
+    } catch (error) {
+        responseDiv.innerHTML = `<h2>Error:</h2><pre>${error.message}</pre>`;
+    }
+});
+
     </script>
 </body>
 </html>
